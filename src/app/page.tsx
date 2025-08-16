@@ -7,7 +7,7 @@ import { FiArrowDown, FiArrowRight, FiCheckCircle, FiStar, FiTrendingUp } from '
 // A. CORE LAYOUT & ANIMATION LOGIC
 // =================================================================
 
-const AnimatedSection = ({ index, totalSections, progress, children }) => {
+const AnimatedSection = ({ index, totalSections, progress, children } : any) => {
     const start = index / totalSections;
     const end = (index + 1) / totalSections;
     
@@ -31,7 +31,7 @@ const AnimatedSection = ({ index, totalSections, progress, children }) => {
     );
 };
 
-const FinalSection = ({ progress, totalSections, children }) => {
+const FinalSection = ({ progress, totalSections, children } : any) => {
     const start = (totalSections - 1) / totalSections;
     
     const opacity = useTransform(progress, [start, start + 0.1], [0, 1]);
@@ -92,7 +92,7 @@ const HeroSection = () => {
     );
 };
 
-const FloatingHeader = ({ scrollRef, sections }) => {
+const FloatingHeader = ({ scrollRef, sections } : any) => {
     const { scrollYProgress } = useScroll({
         target: scrollRef,
         offset: ["start start", "end end"]
@@ -106,7 +106,7 @@ const FloatingHeader = ({ scrollRef, sections }) => {
         ["#0F172A", "#1E293B", "#E2E8F0", "#F8FAFC", "#F8FAFC", "#F8FAFC"]
     );
   
-    const scrollToSection = (index) => {
+    const scrollToSection = (index : any) => {
         if (!scrollRef.current) return;
         const heroHeight = window.innerHeight;
         const targetProgress = (index + 0.5) / sections.length;
@@ -127,7 +127,7 @@ const FloatingHeader = ({ scrollRef, sections }) => {
                     </motion.span>
                 </motion.div>
                 <nav className="hidden md:flex items-center space-x-8">
-                    {sections.slice(0, -1).map((section, index) => (
+                    {sections.slice(0, -1).map((section : any, index : any) => (
                         <motion.button
                             key={section.title}
                             onClick={() => scrollToSection(index)}
@@ -153,7 +153,7 @@ const FloatingHeader = ({ scrollRef, sections }) => {
     );
 };
 
-const AnimatedBackground = ({ progress }) => {
+const AnimatedBackground = ({ progress } : any) => {
     const backgroundColor = useTransform(
       progress,
       [0, 0.2, 0.4, 0.6, 0.8, 1],
