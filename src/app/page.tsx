@@ -1,17 +1,48 @@
 'use client'
 
-import React, { useRef } from 'react';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import React, { useRef, ReactNode } from 'react';
+import { motion, useScroll, useTransform, MotionValue } from 'framer-motion';
 import { FiArrowDown, FiArrowRight, FiCheckCircle, FiStar, FiTrendingUp } from 'react-icons/fi';
 
-// A. CORE LAYOUT & ANIMATION LOGIC
+// A. TYPE DEFINITIONS
 // =================================================================
 
-const AnimatedSection = ({ index, totalSections, progress, children } : any) => {
+interface Section {
+    title: string;
+    content: ReactNode;
+}
+
+interface AnimatedSectionProps {
+    index: number;
+    totalSections: number;
+    progress: MotionValue<number>;
+    children: ReactNode;
+}
+
+interface FinalSectionProps {
+    progress: MotionValue<number>;
+    totalSections: number;
+    children: ReactNode;
+}
+
+// FIX: Updated the type for scrollRef to correctly handle the ref from useRef(null).
+interface FloatingHeaderProps {
+    scrollRef: React.RefObject<HTMLDivElement>;
+    sections: Section[];
+}
+
+interface AnimatedBackgroundProps {
+    progress: MotionValue<number>;
+}
+
+
+// B. CORE LAYOUT & ANIMATION LOGIC
+// =================================================================
+
+const AnimatedSection = ({ index, totalSections, progress, children }: AnimatedSectionProps) => {
     const start = index / totalSections;
     const end = (index + 1) / totalSections;
     
-    // Give each section a "hold" time where it's fully visible
     const peakStart = start + 0.1;
     const peakEnd = end - 0.1;
 
@@ -31,7 +62,7 @@ const AnimatedSection = ({ index, totalSections, progress, children } : any) => 
     );
 };
 
-const FinalSection = ({ progress, totalSections, children } : any) => {
+const FinalSection = ({ progress, totalSections, children }: FinalSectionProps) => {
     const start = (totalSections - 1) / totalSections;
     
     const opacity = useTransform(progress, [start, start + 0.1], [0, 1]);
@@ -50,7 +81,7 @@ const FinalSection = ({ progress, totalSections, children } : any) => {
     );
 }
 
-// B. UI & CONTENT COMPONENTS
+// C. UI & CONTENT COMPONENTS
 // =================================================================
 
 const HeroSection = () => {
@@ -92,7 +123,7 @@ const HeroSection = () => {
     );
 };
 
-const FloatingHeader = ({ scrollRef, sections } : any) => {
+const FloatingHeader = ({ scrollRef, sections }: FloatingHeaderProps) => {
     const { scrollYProgress } = useScroll({
         target: scrollRef,
         offset: ["start start", "end end"]
@@ -106,7 +137,7 @@ const FloatingHeader = ({ scrollRef, sections } : any) => {
         ["#0F172A", "#1E293B", "#E2E8F0", "#F8FAFC", "#F8FAFC", "#F8FAFC"]
     );
   
-    const scrollToSection = (index : any) => {
+    const scrollToSection = (index: number) => {
         if (!scrollRef.current) return;
         const heroHeight = window.innerHeight;
         const targetProgress = (index + 0.5) / sections.length;
@@ -127,7 +158,7 @@ const FloatingHeader = ({ scrollRef, sections } : any) => {
                     </motion.span>
                 </motion.div>
                 <nav className="hidden md:flex items-center space-x-8">
-                    {sections.slice(0, -1).map((section : any, index : any) => (
+                    {sections.slice(0, -1).map((section, index) => (
                         <motion.button
                             key={section.title}
                             onClick={() => scrollToSection(index)}
@@ -153,7 +184,7 @@ const FloatingHeader = ({ scrollRef, sections } : any) => {
     );
 };
 
-const AnimatedBackground = ({ progress } : any) => {
+const AnimatedBackground = ({ progress }: AnimatedBackgroundProps) => {
     const backgroundColor = useTransform(
       progress,
       [0, 0.2, 0.4, 0.6, 0.8, 1],
@@ -162,12 +193,12 @@ const AnimatedBackground = ({ progress } : any) => {
     return <motion.div className="fixed inset-0 z-[-1]" style={{ backgroundColor }} />;
 };
 
-// C. PAGE DEFINITION
+// D. PAGE DEFINITION
 // =================================================================
 
 export default function FreshScrollPage() {
-    const scrollRef = useRef(null);
-    const sections = [
+    const scrollRef = useRef<HTMLDivElement>(null);
+    const sections: Section[] = [
         {
             title: "Welcome",
             content: (
@@ -176,7 +207,7 @@ export default function FreshScrollPage() {
                         Digital Excellence.
                     </motion.h1>
                     <motion.p className="text-xl md:text-2xl text-slate-600 max-w-3xl mx-auto">
-                        We don't just build websites. We build digital experiences that drive growth, engagement, and results.
+                        We don&apos;t just build websites. We build digital experiences that drive growth, engagement, and results.
                     </motion.p>
                 </>
             ),
@@ -253,7 +284,7 @@ export default function FreshScrollPage() {
                         Ready to Grow?
                     </h2>
                     <p className="text-xl text-slate-300 mb-10 max-w-3xl mx-auto">
-                        Let's build something amazing together. Reach out and let us know how we can help you achieve your goals.
+                        Let&apos;s build something amazing together. Reach out and let us know how we can help you achieve your goals.
                     </p>
                     <motion.button
                         whileHover={{ scale: 1.05 }}
@@ -282,11 +313,11 @@ export default function FreshScrollPage() {
                 <div className="sticky top-0 h-screen overflow-hidden">
                     {sections.map((section, index) => (
                         index === sections.length - 1 ? (
-                            <FinalSection key={index} progress={scrollYProgress} totalSections={sections.length}>
+                            <FinalSection key={section.title} progress={scrollYProgress} totalSections={sections.length}>
                                 {section.content}
                             </FinalSection>
                         ) : (
-                            <AnimatedSection key={index} index={index} totalSections={sections.length} progress={scrollYProgress}>
+                            <AnimatedSection key={section.title} index={index} totalSections={sections.length} progress={scrollYProgress}>
                                 {section.content}
                             </AnimatedSection>
                         )
