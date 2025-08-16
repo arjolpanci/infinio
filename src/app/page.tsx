@@ -25,9 +25,10 @@ interface FinalSectionProps {
     children: ReactNode;
 }
 
-// FIX: Updated the type for scrollRef to correctly handle the ref from useRef(null).
+// THE DEFINITIVE FIX: The type for scrollRef is now corrected to match the ref 
+// created by useRef(null). It explicitly accepts a RefObject that can contain a null value.
 interface FloatingHeaderProps {
-    scrollRef: React.RefObject<HTMLDivElement>;
+    scrollRef: React.RefObject<HTMLDivElement | null>;
     sections: Section[];
 }
 
