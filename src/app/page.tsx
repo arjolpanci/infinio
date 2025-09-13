@@ -1,7 +1,7 @@
 'use client'
 
-import React, { useRef, ReactNode } from 'react';
-import { motion, useScroll, useTransform, MotionValue } from 'framer-motion';
+import React, { useState, useRef, ReactNode } from 'react';
+import { motion, useScroll, useTransform, MotionValue, AnimatePresence } from 'framer-motion';
 import { FiArrowDown, FiArrowRight, FiCheckCircle, FiStar, FiTrendingUp } from 'react-icons/fi';
 
 // A. TYPE DEFINITIONS
@@ -25,8 +25,6 @@ interface FinalSectionProps {
     children: ReactNode;
 }
 
-// THE DEFINITIVE FIX: The type for scrollRef is now corrected to match the ref 
-// created by useRef(null). It explicitly accepts a RefObject that can contain a null value.
 interface FloatingHeaderProps {
     scrollRef: React.RefObject<HTMLDivElement | null>;
     sections: Section[];
@@ -51,12 +49,15 @@ const AnimatedSection = ({ index, totalSections, progress, children }: AnimatedS
     const scale = useTransform(progress, [start, peakStart, peakEnd, end], [0.92, 1, 1, 0.92]);
     const y = useTransform(progress, [start, end], ["40px", "-40px"]);
 
+    // THIS IS THE FIX: Only allow pointer events when the section is visible
+    const pointerEvents = useTransform(progress, [start, peakStart, peakEnd, end], ["none", "auto", "auto", "none"]);
+
     return (
         <motion.div 
             className="absolute inset-0 flex items-center justify-center"
-            style={{ opacity, scale, y }}
+            style={{ opacity, scale, y, pointerEvents }} // <-- FIX APPLIED HERE
         >
-            <div className="w-full max-w-5xl mx-auto px-8 text-center">
+            <div className="w-full max-w-6xl mx-auto px-8 text-center">
                 {children}
             </div>
         </motion.div>
@@ -70,10 +71,13 @@ const FinalSection = ({ progress, totalSections, children }: FinalSectionProps) 
     const scale = useTransform(progress, [start, start + 0.1], [0.95, 1]);
     const y = useTransform(progress, [start, start + 0.1], ["40px", "0px"]);
 
+    // THIS IS THE FIX: Only allow pointer events when the section is visible
+    const pointerEvents = useTransform(progress, [start, start + 0.1], ["none", "auto"]);
+
     return (
         <motion.div 
             className="absolute inset-0 flex items-center justify-center"
-            style={{ opacity, scale, y }}
+            style={{ opacity, scale, y, pointerEvents }} // <-- FIX APPLIED HERE
         >
             <div className="w-full max-w-5xl mx-auto px-8 text-center">
                 {children}
@@ -199,6 +203,48 @@ const AnimatedBackground = ({ progress }: AnimatedBackgroundProps) => {
 
 export default function FreshScrollPage() {
     const scrollRef = useRef<HTMLDivElement>(null);
+
+    const pricingData = [
+        {
+            category: 'Social Media',
+            plans: [
+                { name: 'Starter', price: '€249', term: '/ month', features: ['6 posts per month', '3 unique stories per week', 'Caption writing + hashtag research', 'Community engagement'] },
+                { name: 'Pro', price: '€449', term: '/ month', features: ['12 posts (and reels)', '8 unique stories per week', 'Competitor research', 'Business recommendations for growth', 'Paid ads campaign setup & management', 'Advanced growth strategy', 'Full analytics dashboard + monthly call'], popular: true },
+            ]
+        },
+        {
+            category: 'Branding',
+            plans: [
+                { name: 'Starter', price: '€590', term: 'one-time', features: ['Logo + color palette + typography', 'Business card', 'Social media templates', 'Brand guidelines', 'Audience analysis + competitor breakdown', 'Website mockup (5+ pages)'] },
+                { name: 'Professional', price: '€1,290', term: 'one-time', features: ['All Starter features', 'In-depth brand strategy workshop', 'Content guidelines (photography, tone)', 'Brand book (50+ page document)', 'Packaging design concepts'], popular: true },
+            ]
+        },
+        {
+            category: 'Website Design',
+            plans: [
+                { name: 'Starter', price: 'from €190', term: '', features: ['1-3 page site (landing, about, contact)', 'Mobile responsive, SEO-friendly', 'Basic integrations'] },
+                { name: 'Growth', price: 'from €590', term: '', features: ['Up to 7 pages', 'Blog setup & CMS', 'SEO structure & keyword setup', 'Contact forms, booking systems'], popular: true },
+                { name: 'Pro', price: 'from €1,290', term: '', features: ['10+ pages custom design', 'eCommerce functionality', 'Advanced SEO setup', 'Speed optimization & security', '1-month post-launch support'] },
+            ]
+        },
+        {
+            category: 'Logo Design',
+            plans: [
+                { name: 'Basic', price: '€59.90', term: '', features: ['3 concepts + revision', 'Business card', 'Basic vector files'] },
+                { name: 'Professional', price: '€190', term: '', features: ['5 logo concepts', 'Unlimited revisions', 'Full brand files (AI, EPS, PNG, etc.)', 'Mini brand guide (colors + fonts)'], popular: true },
+                { name: 'Premium', price: '€390', term: '', features: ['7+ logo concepts', 'Full brand kit (patterns, icons)', 'Branding consultation (1 hr)'] },
+            ]
+        },
+        {
+            category: 'SEO Services',
+            plans: [
+                { name: 'Starter', price: '€190', term: 'one-time', features: ['Keyword research', 'On-page optimization', 'SEO audit', 'Technical fixes (meta, titles)', '3 unique blog posts'] },
+                { name: 'Growth', price: '€290', term: '/ month', features: ['Everything in Starter', '4 optimized blog posts / month', 'Local SEO setup (Google Business)', 'Competitor keyword tracking'], popular: true },
+                { name: 'Pro', price: '€1,190', term: '/ month', features: ['Everything in Starter + Growth', 'Full technical SEO', 'Backlink outreach & guest posting', 'Content marketing strategy', 'Monthly SEO reports & growth calls'] },
+            ]
+        }
+    ];
+
     const sections: Section[] = [
         {
             title: "Welcome",
@@ -243,37 +289,57 @@ export default function FreshScrollPage() {
         {
             title: "Pricing",
             content: (() => {
-                const plans = [
-                    { name: 'Starter', price: '$99', features: ['Core SEO', '5 Social Posts', 'Basic Analytics'] },
-                    { name: 'Professional', price: '$249', features: ['Advanced SEO', '15 Social Posts', 'PPC Campaigns', 'Monthly Strategy Call'], popular: true },
-                    { name: 'Enterprise', price: '$499', features: ['Full Suite SEO/PPC', 'Unlimited Posts', 'Dedicated Manager', '24/7 Support'] }
-                ];
+                const [activeTab, setActiveTab] = useState(pricingData[0].category);
+                const activeCategory = pricingData.find(p => p.category === activeTab);
+
                 return (
-                    <>
+                    <div className="w-full">
                         <h2 className="text-5xl md:text-6xl font-bold text-white mb-8">
-                            Plans & Pricing
+                            Our Service Packages
                         </h2>
-                        <div className="grid md:grid-cols-3 gap-8 text-left">
-                            {plans.map((plan, i) => (
-                                <motion.div 
-                                    key={plan.name}
-                                    initial={{ opacity: 0, y: 20 }}
-                                    whileInView={{ opacity: 1, y: 0 }}
-                                    transition={{ duration: 0.5, delay: i * 0.1 }}
-                                    viewport={{ once: true }}
-                                    className={`relative p-8 rounded-2xl ${plan.popular ? 'bg-blue-500 text-white' : 'bg-slate-800/50 text-slate-300'}`}
+                        {/* Tab Buttons */}
+                        <div className="flex justify-center space-x-2 md:space-x-4 mb-10 bg-slate-800/50 p-2 rounded-full">
+                            {pricingData.map(p => (
+                                <button
+                                    key={p.category}
+                                    onClick={() => setActiveTab(p.category)}
+                                    className={`relative text-sm md:text-base font-medium px-4 py-2 rounded-full transition-colors ${activeTab === p.category ? 'text-white' : 'text-slate-400 hover:text-white'}`}
                                 >
-                                    {plan.popular && <div className="absolute top-0 -translate-y-1/2 left-1/2 -translate-x-1/2 bg-white text-blue-500 font-bold px-4 py-1 rounded-full text-sm">Most Popular</div>}
-                                    <h3 className="text-2xl font-bold mb-2 text-white">{plan.name}</h3>
-                                    <p className="text-4xl font-black mb-6 text-white">{plan.price}<span className="text-lg font-medium opacity-70">/mo</span></p>
-                                    <ul className="space-y-3 mb-8">
-                                        {plan.features.map(feat => <li key={feat} className="flex items-center"><FiCheckCircle className="mr-3 text-green-400" /> {feat}</li>)}
-                                    </ul>
-                                    <button className={`w-full py-3 rounded-lg font-bold ${plan.popular ? 'bg-white text-blue-500' : 'bg-blue-500 text-white'}`}>Choose Plan</button>
-                                </motion.div>
+                                    {p.category}
+                                    {activeTab === p.category && (
+                                        <motion.div layoutId="underline" className="absolute inset-0 bg-blue-500 rounded-full z-[-1]" />
+                                    )}
+                                </button>
                             ))}
                         </div>
-                    </>
+                        
+                        {/* Pricing Cards */}
+                        <AnimatePresence mode="wait">
+                            <motion.div
+                                key={activeTab}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -20 }}
+                                transition={{ duration: 0.3 }}
+                                className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 text-left"
+                            >
+                                {activeCategory?.plans.map((plan) => (
+                                    <div 
+                                        key={plan.name}
+                                        className={`relative p-8 rounded-2xl flex flex-col ${plan.popular ? 'bg-blue-500 text-white border-2 border-blue-300' : 'bg-slate-800/50 text-slate-300'}`}
+                                    >
+                                        {plan.popular && <div className="absolute top-0 -translate-y-1/2 left-1/2 -translate-x-1/2 bg-white text-blue-500 font-bold px-4 py-1 rounded-full text-sm shadow-lg">Most Popular</div>}
+                                        <h3 className="text-2xl font-bold mb-2 text-white">{plan.name}</h3>
+                                        <p className="text-4xl font-black mb-6 text-white">{plan.price}<span className="text-lg font-medium opacity-70">{plan.term}</span></p>
+                                        <ul className="space-y-3 mb-8 flex-grow">
+                                            {plan.features.map(feat => <li key={feat} className="flex items-start"><FiCheckCircle className="mr-3 mt-1 text-green-400 flex-shrink-0" /> {feat}</li>)}
+                                        </ul>
+                                        <button className={`w-full mt-auto py-3 rounded-lg font-bold transition-transform transform hover:scale-105 ${plan.popular ? 'bg-white text-blue-500' : 'bg-blue-500 text-white'}`}>Choose Plan</button>
+                                    </div>
+                                ))}
+                            </motion.div>
+                        </AnimatePresence>
+                    </div>
                 );
             })(),
         },
